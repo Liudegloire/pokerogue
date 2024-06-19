@@ -21,6 +21,7 @@ import { pokemonInfo as zhTwPokemonInfo } from "#app/locales/zh_TW/pokemon-info.
 import { battle as zhTwBattleStat } from "#app/locales/zh_TW/battle.js";
 
 import i18next, {initI18n} from "#app/plugins/i18n";
+import { KoreanPostpositionProcessor } from "i18next-korean-postposition-processor";
 
 interface BattleStatTestUnit {
   stat: BattleStat,
@@ -50,30 +51,6 @@ describe("Test for BattleStat Localization", () => {
   const battleStatLevelUnits: BattleStatLevelTestUnit[] = [];
 
   beforeAll(() => {
-    const fontFaceSetMock = {
-      add: jest.fn(),
-      load: jest.fn().mockResolvedValue([]),
-      check: jest.fn().mockReturnValue(true),
-      ready: Promise.resolve(),
-    };
-
-    const proxyHandler = {
-      get: (target, prop) => {
-        if (prop in target) {
-          return target[prop];
-        } else {
-          return document.fonts[prop];
-        }
-      }
-    };
-
-    const fontsProxy = new Proxy(fontFaceSetMock, proxyHandler);
-
-    Object.defineProperty(document, "fonts", {
-      value: fontsProxy,
-      configurable: true,
-    });
-
     initI18n();
 
     battleStatUnits.push({ stat: BattleStat.ATK, key: "Stat.ATK" });
@@ -222,7 +199,9 @@ describe("Test for BattleStat Localization", () => {
   it("Test getBattleStatLevelChangeDescription() in 한국어", async () => {
     i18next.changeLanguage("ko", () => {
       battleStatLevelUnits.forEach(unit => {
-        testBattleStatLevelChangeDescription(unit.levels, unit.up, koBattleStat[unit.key]);
+        const processor = new KoreanPostpositionProcessor();
+        const message = processor.process(koBattleStat[unit.key]);
+        testBattleStatLevelChangeDescription(unit.levels, unit.up, message);
       });
     });
   });
